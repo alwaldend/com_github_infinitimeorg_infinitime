@@ -1,0 +1,20 @@
+load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "strip_prefix")
+
+filegroup(
+    name = "marker",
+    srcs = ["BUILD.bazel"],
+    visibility = ["//visibility:public"],
+)
+
+pkg_filegroup(
+    name = "srcs",
+    srcs = [":srcs_files"],
+    visibility = ["//visibility:public"],
+)
+
+pkg_files(
+    name = "srcs_files",
+    srcs = glob(["**"]),
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:public"],
+)

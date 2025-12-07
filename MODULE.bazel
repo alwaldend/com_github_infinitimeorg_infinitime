@@ -1,0 +1,90 @@
+module(
+    name = "com_alwaldend_com_github_infinitimeorg_infinitime",
+    version = "0.0.0",
+    bazel_compatibility = [">=8.0.0"],
+    compatibility_level = 0,
+)
+
+bazel_dep(name = "rules_license", version = "1.0.0")
+bazel_dep(name = "rules_python", version = "1.6.3")
+bazel_dep(name = "rules_foreign_cc", version = "0.15.1")
+bazel_dep(name = "rules_pkg", version = "1.1.0")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_nodejs", version = "6.6.0")
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
+bazel_dep(name = "aspect_rules_js", version = "2.7.0")
+
+bazel_dep(name = "bazelrc-preset.bzl", version = "1.6.0", dev_dependency = True)
+
+PYTHON_VERSION = "3.12.11"
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    is_default = True,
+    python_version = PYTHON_VERSION,
+)
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "com_alwaldend_com_github_infinitimeorg_infinitime_pip",
+    python_version = PYTHON_VERSION,
+    requirements_lock = "//:requirements.txt",
+)
+use_repo(
+    pip,
+    "com_alwaldend_com_github_infinitimeorg_infinitime_pip",
+)
+
+node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
+node.toolchain(
+    name = "com_alwaldend_com_github_infinitimeorg_infinitime_nodejs_toolchains",
+    node_version = "16.14.2",
+)
+use_repo(node, com_alwaldend_com_github_infinitimeorg_infinitime_nodejs_toolchains = "nodejs_toolchains")
+
+pnpm = use_extension("@aspect_rules_js//npm:extensions.bzl", "pnpm")
+pnpm.pnpm(
+    name = "com_alwaldend_com_github_infinitimeorg_infinitime_pnpm",
+    pnpm_version = "10.18.1",
+)
+use_repo(pnpm, "com_alwaldend_com_github_infinitimeorg_infinitime_pnpm")
+
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
+npm.npm_translate_lock(
+    name = "com_alwaldend_com_github_infinitimeorg_infinitime_npm",
+    bins = {
+        "lv_font_conv": ["lv_font_conv=./lv_font_conv.js"],
+    },
+    data = [
+        "//:pnpm-workspace.yaml",
+    ],
+    pnpm_lock = "//:pnpm-lock.yaml",
+    run_lifecycle_hooks = False,
+    verify_node_modules_ignored = "//:.bazelignore",
+)
+use_repo(npm, "com_alwaldend_com_github_infinitimeorg_infinitime_npm")
+
+GCC_ARM_VERSION = "10.3-2021.10"
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "com_alwaldend_com_github_infinitimeorg_infinitime_com_arm_developer_gcc_arm",
+    build_file = "//:BUILD.general.bazel",
+    integrity = "sha256-l9u08BmtFlC3Mvr/zIgWic7cFOK37oY9OQ4KQe8WyaM=",
+    strip_prefix = "gcc-arm-none-eabi-{}".format(GCC_ARM_VERSION),
+    url = "https://developer.arm.com/-/media/Files/downloads/gnu-rm/{version}/{name}-{version}-{platform}.tar.bz2".format(
+        name = "gcc-arm-none-eabi",
+        machine = "arm64",
+        platform = "x86_64-linux",
+        version = GCC_ARM_VERSION,
+    ),
+)
+
+http_archive(
+    name = "com_alwaldend_com_github_infinitimeorg_infinitime_com_nordicsemi_developer_nrfsdk",
+    build_file = "//:BUILD.general.bazel",
+    integrity = "sha256-nJMH11fRCQB/L8xOVHrBCxqf2fqkd+jb8/fhYkxIAaU=",
+    strip_prefix = "nRF5_SDK_15.3.0_59ac345",
+    url = "https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v15.x.x/nRF5_SDK_15.3.0_59ac345.zip",
+)

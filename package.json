@@ -1,0 +1,9 @@
+{
+  "name": "com_alwaldend_com_github_infinitimeorg_infinitime",
+  "devDependencies": {
+    "lv_font_conv": "^1.5.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": []
+  }
+}

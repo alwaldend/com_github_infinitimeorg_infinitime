@@ -1,3 +1,5 @@
+bazel-*
+
 .idea/
 # Python virtual environment for DFU images
 .venv/

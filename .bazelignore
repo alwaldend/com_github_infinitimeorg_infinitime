@@ -1,0 +1,6 @@
+node_modules
+.git
+external
+bazel-bin
+bazel-out
+bazel-testlogs

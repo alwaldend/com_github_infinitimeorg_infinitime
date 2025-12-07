@@ -1,0 +1,8 @@
+# adafruit
+Pillow
+adafruit-nrfutil
+# tools/mcuboot
+cryptography>=2.6
+intelhex
+click
+cbor>=1.0.0
