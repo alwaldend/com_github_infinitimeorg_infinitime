@@ -1,0 +1,10 @@
+load("@com_alwaldend_com_github_infinitimeorg_infinitime_pip//:requirements.bzl", "all_requirements")
+load("@rules_python//python:py_binary.bzl", "py_binary")
+
+py_binary(
+    name = "py",
+    srcs = ["build.py"],
+    main = "build.py",
+    visibility = ["//:__subpackages__"],
+    deps = all_requirements + ["//tools/mcuboot:imgtool_lib"],
+)

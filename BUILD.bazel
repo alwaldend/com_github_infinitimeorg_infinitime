@@ -1,4 +1,3 @@
-load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@bazelrc-preset.bzl", "bazelrc_preset")
 load("@com_alwaldend_com_github_infinitimeorg_infinitime_npm//:defs.bzl", "npm_link_all_packages")
@@ -9,6 +8,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "strip_prefix
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 load("//tools/build/bzl:build_binary.bzl", "build_binary")
+load("//tools/build/bzl:build_run_binary.bzl", "build_run_binary")
 
 write_file(
     name = "write_patches",
@@ -22,15 +22,20 @@ write_file(
     is_executable = True,
 )
 
-run_binary(
-    name = "build",
-    outs = ["build.dir"],
-    args = [
-        "--build_dir",
-        "$(execpath build.dir)",
-    ],
-    tool = ":build_binary",
+genrule(
+    name = "dfu",
+    srcs = [":build"],
+    outs = ["pinetime-mcuboot-app-dfu-1.15.0.zip"],
+    cmd = """
+        cp $(execpath :build)/src/pinetime-mcuboot-app-dfu-1.15.0.zip \
+            $(execpath pinetime-mcuboot-app-dfu-1.15.0.zip)
+    """,
     visibility = ["//visibility:public"],
+)
+
+build_run_binary(
+    name = "build",
+    binary = ":build_binary",
 )
 
 build_binary(
@@ -40,8 +45,9 @@ build_binary(
         ":nrfsdk",
         ":srcs",
     ],
+    build_type = "Release",
     tools = [
-        ":adafruit_nrfutil",
+        ":adafruit-nrfutil",
         ":lv_font_conv",
     ],
 )
@@ -125,9 +131,8 @@ pkg_filegroup(
 )
 
 py_console_script_binary(
-    name = "adafruit_nrfutil",
+    name = "adafruit-nrfutil",
     pkg = "@com_alwaldend_com_github_infinitimeorg_infinitime_pip//adafruit_nrfutil",
-    script = "adafruit-nrfutil",
 )
 
 alias(
