@@ -1,4 +1,5 @@
 bazel-*
+out
 
 .idea/
 # Python virtual environment for DFU images

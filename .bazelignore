@@ -4,3 +4,4 @@ external
 bazel-bin
 bazel-out
 bazel-testlogs
+out
