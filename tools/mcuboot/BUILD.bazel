@@ -1,0 +1,23 @@
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+load("@rules_python//python:py_library.bzl", "py_library")
+
+py_library(
+    name = "imgtool_lib",
+    srcs = glob(
+        ["imgtool/**"],
+        exclude = ["BUILD.bazel"],
+    ),
+    imports = ["."],
+    visibility = ["//tools/build/py:__pkg__"],
+)
+
+pkg_files(
+    name = "srcs",
+    srcs = glob(
+        ["**"],
+        exclude = ["imgtool/**"],
+    ),
+    prefix = package_name(),
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//:__pkg__"],
+)
