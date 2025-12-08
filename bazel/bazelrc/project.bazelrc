@@ -1,0 +1,15 @@
+common --disk_cache=~/.cache/bazel/disk_cache
+# Fix refetch after shutdown caused by the preset, remove in 8.5.0: https://github.com/bazelbuild/bazel/issues/27787
+common --incompatible_enforce_starlark_utf8=warning
+# Fix autoload from the preset
+common --incompatible_disable_native_repo_rules=false
+# Disable auto_exec_groups from the preset
+common --incompatible_auto_exec_groups=false
+# Setup java
+common --java_language_version=21
+common --java_runtime_version=remotejdk_21
+common --tool_java_language_version=21
+common --tool_java_runtime_version=remotejdk_21
+# Disable telemetry (https://github.com/aspect-build/tools_telemetry)
+common --repo_env=ASPECT_TOOLS_TELEMETRY=
+common --repo_env=DO_NOT_TRACK=1

@@ -1,0 +1,10 @@
+load("@rules_license//rules:license.bzl", "license")
+
+license(
+    name = "license",
+    license_kinds = [
+        "@rules_license//licenses/spdx:GPL-3.0",
+    ],
+    license_text = "//:LICENSE",
+    visibility = ["//:__subpackages__"],
+)

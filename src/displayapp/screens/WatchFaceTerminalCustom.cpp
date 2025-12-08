@@ -13,12 +13,12 @@
 using namespace Pinetime::Applications::Screens;
 
 WatchFaceTerminalCustom::WatchFaceTerminalCustom(Controllers::DateTime& dateTimeController,
-                                     const Controllers::Battery& batteryController,
-                                     const Controllers::Ble& bleController,
-                                     Controllers::NotificationManager& notificationManager,
-                                     Controllers::Settings& settingsController,
-                                     Controllers::HeartRateController& heartRateController,
-                                     Controllers::MotionController& motionController)
+                                                 const Controllers::Battery& batteryController,
+                                                 const Controllers::Ble& bleController,
+                                                 Controllers::NotificationManager& notificationManager,
+                                                 Controllers::Settings& settingsController,
+                                                 Controllers::HeartRateController& heartRateController,
+                                                 Controllers::MotionController& motionController)
   : currentDateTime {{}},
     dateTimeController {dateTimeController},
     batteryController {batteryController},
@@ -126,9 +126,15 @@ void WatchFaceTerminalCustom::Refresh() {
     }
   }
 
-  lv_label_set_text_fmt(weekdayValue, "weekdday: %s %d", dateTimeController.DayOfWeekShortToStringLow(dateTimeController.DayOfWeek()), dateTimeController.DayOfWeek());
-  
-  lv_label_set_text_fmt(monthValue, "month: %s %d", dateTimeController.MonthShortToStringLow(dateTimeController.Month()), dateTimeController.Month());
+  lv_label_set_text_fmt(weekdayValue,
+                        "weekdday: %s %d",
+                        dateTimeController.DayOfWeekShortToStringLow(dateTimeController.DayOfWeek()),
+                        dateTimeController.DayOfWeek());
+
+  lv_label_set_text_fmt(monthValue,
+                        "month: %s %d",
+                        dateTimeController.MonthShortToStringLow(dateTimeController.Month()),
+                        dateTimeController.Month());
 
   heartbeat = heartRateController.HeartRate();
   heartbeatRunning = heartRateController.State() != Controllers::HeartRateController::States::Stopped;

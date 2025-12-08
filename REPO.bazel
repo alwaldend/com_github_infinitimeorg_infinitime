@@ -1,6 +1,6 @@
 repo(
     default_package_metadata = [
-        "//:license",
+        "//bazel/bzl:license",
     ],
     default_visibility = ["//visibility:private"],
 )
