@@ -1,5 +1,7 @@
+compile_commands.json
 bazel-*
 out
+!tools/build
 
 .idea/
 # Python virtual environment for DFU images
