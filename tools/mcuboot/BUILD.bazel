@@ -8,7 +8,7 @@ py_library(
         exclude = ["BUILD.bazel"],
     ),
     imports = ["."],
-    visibility = ["//tools/build/py:__pkg__"],
+    visibility = ["//bazel/py:__pkg__"],
 )
 
 pkg_files(

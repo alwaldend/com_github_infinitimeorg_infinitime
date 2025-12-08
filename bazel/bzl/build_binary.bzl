@@ -73,7 +73,7 @@ build_binary = rule(
     attrs = {
         "build_tool": attr.label(
             executable = True,
-            default = "//tools/build/py",
+            default = "//bazel/py",
             doc = "Build tool",
             cfg = "exec",
         ),
