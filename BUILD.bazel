@@ -18,10 +18,9 @@ write_file(
         "#!/usr/bin/env sh",
         "set -eu",
         'cd "${BUILD_WORKSPACE_DIRECTORY}"',
-        "git diff \
-            --no-prefix \
+        "git format-patch \
+            --output-directory ../src/projects/infinitime/main/patch \
             1.15.0 \
-            >../src/projects/infinitime/main/patch/patch.patch \
         ",
     ],
     is_executable = True,
