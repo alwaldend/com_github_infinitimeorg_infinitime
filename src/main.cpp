@@ -1,4 +1,5 @@
 // nrf
+#include <components/pomodoro/PomodoroController.h>
 #include <hal/nrf_wdt.h>
 #include <legacy/nrf_drv_clock.h>
 #include <libraries/gpiote/app_gpiote.h>
@@ -108,12 +109,14 @@ Pinetime::Controllers::AlarmController alarmController {dateTimeController, fs};
 Pinetime::Controllers::TouchHandler touchHandler;
 Pinetime::Controllers::ButtonHandler buttonHandler;
 Pinetime::Controllers::BrightnessController brightnessController {};
+Pinetime::Controllers::PomodoroController pomodoroController {dateTimeController, fs};
 
 Pinetime::Applications::DisplayApp displayApp(lcd,
                                               touchPanel,
                                               batteryController,
                                               bleController,
                                               dateTimeController,
+                                              pomodoroController,
                                               watchdog,
                                               notificationManager,
                                               heartRateController,
@@ -134,6 +137,7 @@ Pinetime::System::SystemTask systemTask(spi,
                                         bleController,
                                         dateTimeController,
                                         alarmController,
+                                        pomodoroController,
                                         watchdog,
                                         notificationManager,
                                         heartRateSensor,

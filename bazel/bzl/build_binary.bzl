@@ -6,11 +6,22 @@ def _impl(ctx):
     exec = ctx.actions.declare_file("{}.script.sh".format(ctx.label.name))
     root = "${{0}}.runfiles/{}".format(ctx.workspace_name)
 
-    args = []
-    args.extend(["build"])
-    args.extend(["--src_dir", "{}/{}".format(root, "srcs")])
-    args.extend(["--gcc_dir", "{}/{}".format(root, "gcc")])
-    args.extend(["--nrfsdk_dir", "{}/{}".format(root, "nrfsdk")])
+    args = ["build"]
+
+    for flag, dir, attrs in [
+        ("--src_dir", "srcs", ctx.attr.srcs),
+        ("--gcc_dir", "gcc", ctx.attr.gcc),
+        ("--nrfsdk_dir", "nrfsdk", ctx.attr.nrfsdk),
+    ]:
+        args.extend([flag, "{}/{}".format(root, dir)])
+        symlinks = {}
+        for attr in attrs:
+            for pkg_files, _ in attr[PackageFilegroupInfo].pkg_files:
+                for dest, src in pkg_files.dest_src_map.items():
+                    symlinks["{}/{}".format(dir, dest)] = src
+        runfiles = runfiles.merge(ctx.runfiles(symlinks = symlinks))
+
+    runfiles = runfiles.merge(ctx.runfiles(symlinks = symlinks))
     args.extend(["--build_dir", "{}/{}".format(root, "build")])
     args.extend(["--build_type", ctx.attr.build_type])
 
@@ -34,13 +45,8 @@ def _impl(ctx):
         )
         runfiles = runfiles.merge(tool[DefaultInfo].default_runfiles)
 
-    src_symlinks = {}
-    for src in ctx.attr.srcs:
-        for files, _ in src[PackageFilegroupInfo].pkg_files:
-            src_symlinks.update(files.dest_src_map)
-    runfiles = runfiles.merge(ctx.runfiles(symlinks = src_symlinks))
-
     runfiles = runfiles.merge(ctx.attr.build_tool[DefaultInfo].default_runfiles)
+    args.extend(ctx.attr.arguments)
     script_content = """\
         #!/usr/bin/env sh
         set -eu
@@ -77,18 +83,33 @@ build_binary = rule(
             doc = "Build tool",
             cfg = "exec",
         ),
+        "arguments": attr.string_list(
+            doc = "Arguments",
+        ),
         "srcs": attr.label_list(
             providers = [PackageFilegroupInfo],
-            mandatory = True,
             doc = "Srcs",
+        ),
+        "gcc": attr.label_list(
+            providers = [PackageFilegroupInfo],
+            default = ["@com_alwaldend_com_github_infinitimeorg_infinitime_com_arm_developer_gcc_arm//:srcs"],
+            doc = "Gcc",
+        ),
+        "nrfsdk": attr.label_list(
+            providers = [PackageFilegroupInfo],
+            default = ["@com_alwaldend_com_github_infinitimeorg_infinitime_com_nordicsemi_developer_nrfsdk//:srcs"],
+            doc = "Nrfsdk",
         ),
         "tools": attr.label_list(
             doc = "Binaries that should be on $PATH",
-            mandatory = True,
+            default = [
+                "//bazel/js:lv_font_conv",
+                "//bazel/py:adafruit-nrfutil",
+            ],
             cfg = "exec",
         ),
         "build_type": attr.string(
-            mandatory = True,
+            default = "Release",
             doc = "Cmake build type",
         ),
     },

@@ -1,5 +1,6 @@
 #pragma once
 #include <FreeRTOS.h>
+#include <components/pomodoro/PomodoroController.h>
 #include <queue.h>
 #include <task.h>
 #include <memory>
@@ -57,6 +58,7 @@ namespace Pinetime {
                  const Controllers::Battery& batteryController,
                  const Controllers::Ble& bleController,
                  Controllers::DateTime& dateTimeController,
+                 Pinetime::Controllers::PomodoroController& pomodoroController,
                  const Drivers::Watchdog& watchdog,
                  Pinetime::Controllers::NotificationManager& notificationManager,
                  Pinetime::Controllers::HeartRateController& heartRateController,
@@ -86,6 +88,7 @@ namespace Pinetime {
       const Pinetime::Controllers::Battery& batteryController;
       const Pinetime::Controllers::Ble& bleController;
       Pinetime::Controllers::DateTime& dateTimeController;
+      Pinetime::Controllers::PomodoroController& pomodoroController;
       const Pinetime::Drivers::Watchdog& watchdog;
       Pinetime::System::SystemTask* systemTask = nullptr;
       Pinetime::Controllers::NotificationManager& notificationManager;

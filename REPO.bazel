@@ -4,3 +4,5 @@ repo(
     ],
     default_visibility = ["//visibility:private"],
 )
+
+ignore_directories(["bazel-*"])

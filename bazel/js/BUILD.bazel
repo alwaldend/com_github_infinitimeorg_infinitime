@@ -1,0 +1,6 @@
+load("@com_alwaldend_com_github_infinitimeorg_infinitime_npm//:lv_font_conv/package_json.bzl", lv_font_conv = "bin")
+
+lv_font_conv.lv_font_conv_binary(
+    name = "lv_font_conv",
+    visibility = ["//:__subpackages__"],
+)

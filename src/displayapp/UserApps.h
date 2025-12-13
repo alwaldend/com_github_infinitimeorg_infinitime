@@ -14,7 +14,7 @@
 #include "displayapp/screens/WatchFaceInfineat.h"
 #include "displayapp/screens/WatchFacePineTimeStyle.h"
 #include "displayapp/screens/WatchFaceTerminal.h"
-#include "displayapp/screens/WatchFaceTerminalCustom.h"
+#include "displayapp/screens/WatchFaceText.h"
 
 namespace Pinetime {
   namespace Applications {

@@ -4,9 +4,11 @@
 #include "displayapp/screens/Motion.h"
 #include "displayapp/screens/Timer.h"
 #include "displayapp/screens/Alarm.h"
+#include "displayapp/screens/Pomodoro.h"
 #include "components/battery/BatteryController.h"
 #include "components/ble/BleController.h"
 #include "components/datetime/DateTimeController.h"
+#include <components/pomodoro/PomodoroController.h>
 #include "components/ble/NotificationManager.h"
 #include "components/motion/MotionController.h"
 #include "components/motor/MotorController.h"
@@ -72,6 +74,7 @@ DisplayApp::DisplayApp(Drivers::St7789& lcd,
                        const Controllers::Battery& batteryController,
                        const Controllers::Ble& bleController,
                        Controllers::DateTime& dateTimeController,
+                       Controllers::PomodoroController& pomodoroController,
                        const Drivers::Watchdog& watchdog,
                        Pinetime::Controllers::NotificationManager& notificationManager,
                        Pinetime::Controllers::HeartRateController& heartRateController,
@@ -88,6 +91,7 @@ DisplayApp::DisplayApp(Drivers::St7789& lcd,
     batteryController {batteryController},
     bleController {bleController},
     dateTimeController {dateTimeController},
+    pomodoroController {pomodoroController},
     watchdog {watchdog},
     notificationManager {notificationManager},
     heartRateController {heartRateController},
@@ -110,6 +114,7 @@ DisplayApp::DisplayApp(Drivers::St7789& lcd,
                  motorController,
                  motionController,
                  alarmController,
+                 pomodoroController,
                  brightnessController,
                  nullptr,
                  filesystem,

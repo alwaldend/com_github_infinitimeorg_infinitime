@@ -1,7 +1,6 @@
 load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
-load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "strip_prefix")
 load("@com_alwaldend_com_github_infinitimeorg_infinitime_npm//:defs.bzl", "npm_link_all_packages")
-load("@com_alwaldend_com_github_infinitimeorg_infinitime_npm//:lv_font_conv/package_json.bzl", lv_font_conv = "bin")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "strip_prefix")
 load("//bazel/bzl:build_binary.bzl", "build_binary")
 load("//bazel/bzl:build_run_binary.bzl", "build_run_binary")
 
@@ -41,15 +40,16 @@ build_run_binary(
 
 build_binary(
     name = "build_binary",
-    srcs = [
-        "//bazel:gcc",
-        "//bazel:nrfsdk",
-        ":srcs",
-    ],
-    build_type = "Release",
-    tools = [
-        "//bazel:adafruit-nrfutil",
-        ":lv_font_conv",
+    srcs = [":srcs"],
+)
+
+build_binary(
+    name = "build_binary_dev",
+    arguments = [
+        "--src_dir",
+        "${BUILD_WORKSPACE_DIRECTORY}",
+        "--build_dir",
+        "${BUILD_WORKSPACE_DIRECTORY}/out",
     ],
 )
 
@@ -59,7 +59,6 @@ pkg_filegroup(
         ":srcs_files",
         "//tools/mcuboot:srcs",
     ],
-    prefix = "srcs",
 )
 
 pkg_files(
@@ -70,10 +69,6 @@ pkg_files(
 
 npm_link_all_packages(
     name = "node_modules",
-)
-
-lv_font_conv.lv_font_conv_binary(
-    name = "lv_font_conv",
 )
 
 exports_files(
