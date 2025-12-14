@@ -1,25 +1,24 @@
-load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@com_alwaldend_com_github_infinitimeorg_infinitime_npm//:defs.bzl", "npm_link_all_packages")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "strip_prefix")
 load("//bazel/bzl:build_binary.bzl", "build_binary")
 load("//bazel/bzl:build_run_binary.bzl", "build_run_binary")
 
-write_source_files(
-    name = "write",
-    files = {
-        "compile_commands.json": "//:compile_commands",
-    },
-)
-
-genrule(
-    name = "compile_commands",
-    srcs = [":build"],
-    outs = ["build_compile_commands.json"],
-    cmd = """
-        cp $(execpath :build)/compile_commands.json \
-            $(execpath build_compile_commands.json)
-    """,
-    visibility = ["//visibility:public"],
+write_file(
+    name = "patches",
+    out = "patches.sh",
+    content = [
+        "#!/usr/bin/env sh",
+        "set -eux",
+        'cd "${BUILD_WORKSPACE_DIRECTORY}"',
+        "git diff --check 1.15.0",
+        "git diff \
+            --cached \
+            1.15.0 \
+            >../src/projects/infinitime/main/patch/patch.patch \
+        ",
+    ],
+    is_executable = True,
 )
 
 genrule(
@@ -63,7 +62,10 @@ pkg_filegroup(
 
 pkg_files(
     name = "srcs_files",
-    srcs = glob(["**"]),
+    srcs = glob(
+        ["**"],
+        exclude = ["compile_commands.json"],
+    ),
     strip_prefix = strip_prefix.from_pkg(),
 )
 

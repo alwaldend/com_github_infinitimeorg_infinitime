@@ -19,6 +19,11 @@ namespace {
     auto* screen = static_cast<Pomodoro*>(userData);
     screen->OnValueChanged();
   }
+
+  void stopAlarmTaskHandler(lv_task_t* task) {
+    auto* screen = static_cast<Pomodoro*>(task->user_data);
+    screen->StopAlarm();
+  }
 }
 
 Pomodoro::Pomodoro(Controllers::PomodoroController& pomodoroController,
@@ -67,28 +72,39 @@ Pomodoro::Pomodoro(Controllers::PomodoroController& pomodoroController,
   lv_obj_align(enableSwitch, lv_scr_act(), LV_ALIGN_IN_BOTTOM_LEFT, 7, 0);
   lv_obj_set_style_local_bg_color(enableSwitch, LV_SWITCH_PART_BG, LV_STATE_DEFAULT, bgColor);
 
+  buttonInterval = lv_btn_create(lv_scr_act(), nullptr);
+  buttonInterval->user_data = this;
+  lv_obj_set_event_cb(buttonInterval, buttonEventHandler);
+  lv_obj_set_size(buttonInterval, 115, 50);
+  lv_obj_align(buttonInterval, lv_scr_act(), LV_ALIGN_IN_BOTTOM_RIGHT, 0, 0);
+  buttonIntervalLabel = lv_label_create(buttonInterval, nullptr);
+  updateIntervalButton();
+  lv_obj_set_style_local_bg_color(buttonInterval, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, bgColor);
+
   updateDuration();
 
   if (pomodoroController.IsAlerting()) {
-    startAlerting();
+    OnPomodoroAlarmTriggered();
+  } else {
+    updateSwitch(LV_ANIM_OFF);
   }
 }
 
 Pomodoro::~Pomodoro() {
   if (pomodoroController.IsAlerting()) {
-    stopAlerting();
+    StopAlarm();
   }
   lv_obj_clean(lv_scr_act());
   pomodoroController.SaveState();
 }
 
 bool Pomodoro::OnButtonPushed() {
-  if (buttonInfoPopupLabel != nullptr && buttonInfo != nullptr) {
-    hideInfo();
+  if (infoPopupButtonLabel != nullptr && buttonInfo != nullptr) {
+    onInfoPopupButtonPress();
     return true;
   }
   if (pomodoroController.IsAlerting()) {
-    stopAlerting();
+    StopAlarm();
     return true;
   }
   return false;
@@ -99,13 +115,15 @@ void Pomodoro::OnButtonEvent(lv_obj_t* obj, lv_event_t event) {
     return;
   }
   if (obj == buttonStop) {
-    stopAlerting();
+    StopAlarm();
   } else if (obj == buttonInfo) {
-    showInfo();
-  } else if (obj == buttonInfoPopup) {
-    hideInfo();
+    onInfoButtonPress();
+  } else if (obj == infoPopupButton) {
+    onInfoPopupButtonPress();
   } else if (obj == enableSwitch) {
-    toggleSwitch();
+    onEnableSwitchPress();
+  } else if (obj == buttonInterval) {
+    onIntervalButtonPress();
   }
 }
 
@@ -118,38 +136,80 @@ void Pomodoro::OnValueChanged() {
   updateDuration();
 }
 
-void Pomodoro::startAlerting() {
+void Pomodoro::OnPomodoroAlarmTriggered() {
+  lv_obj_set_hidden(enableSwitch, true);
+  lv_obj_set_hidden(buttonStop, false);
+  taskStopAlarm = lv_task_create(stopAlarmTaskHandler, pdMS_TO_TICKS(60 * 1000), LV_TASK_PRIO_MID, this);
+  motorController.StartRinging();
+  wakeLock.Lock();
 }
 
-void Pomodoro::stopAlerting() {
+void Pomodoro::StopAlarm() {
+  motorController.StopRinging();
+  pomodoroController.ToggleInterval();
+  pomodoroController.ScheduleAlarm();
+  updateIntervalButton();
+  updateSwitch(LV_ANIM_OFF);
+  if (taskStopAlarm != nullptr) {
+    lv_task_del(taskStopAlarm);
+    taskStopAlarm = nullptr;
+  }
+  wakeLock.Release();
+  lv_obj_set_hidden(enableSwitch, false);
+  lv_obj_set_hidden(buttonStop, true);
+  pomodoroController.StopAlarm();
 }
 
-void Pomodoro::toggleSwitch() {
+void Pomodoro::onIntervalButtonPress() {
+  pomodoroController.ToggleInterval();
+  updateIntervalButton();
+}
+
+void Pomodoro::updateIntervalButton() {
+  switch (pomodoroController.Interval()) {
+    case Pinetime::Controllers::PomodoroController::IntervalType::Break:
+      lv_label_set_text_static(buttonIntervalLabel, "BREAK");
+      break;
+    case Pinetime::Controllers::PomodoroController::IntervalType::Focus:
+      lv_label_set_text_static(buttonIntervalLabel, "FOCUS");
+      break;
+  }
+}
+
+void Pomodoro::onEnableSwitchPress() {
   pomodoroController.UpdateEnabled(lv_switch_get_state(enableSwitch));
+}
+
+void Pomodoro::updateSwitch(lv_anim_enable_t anim) {
+  if (pomodoroController.IsEnabled()) {
+    lv_switch_on(enableSwitch, anim);
+  } else {
+    lv_switch_off(enableSwitch, anim);
+  }
 }
 
 void Pomodoro::updateDuration() {
   pomodoroController.UpdateDuration(focusCounter.GetValue(), breakCounter.GetValue());
 }
 
-void Pomodoro::showInfo() {
-  if (buttonInfoPopup != nullptr) {
+void Pomodoro::onInfoButtonPress() {
+  if (infoPopupButton != nullptr) {
     return;
   }
-  buttonInfoPopup = lv_btn_create(lv_scr_act(), nullptr);
-  buttonInfoPopup->user_data = this;
-  lv_obj_set_event_cb(buttonInfoPopup, buttonEventHandler);
-  lv_obj_set_height(buttonInfoPopup, 200);
-  lv_obj_set_width(buttonInfoPopup, 150);
-  lv_obj_align(buttonInfoPopup, lv_scr_act(), LV_ALIGN_CENTER, 0, 0);
-  lv_obj_set_style_local_bg_color(buttonInfoPopup, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_NAVY);
+  infoPopupButton = lv_btn_create(lv_scr_act(), nullptr);
+  infoPopupButton->user_data = this;
+  lv_obj_set_event_cb(infoPopupButton, buttonEventHandler);
+  lv_obj_set_height(infoPopupButton, 200);
+  lv_obj_set_width(infoPopupButton, 150);
+  lv_obj_align(infoPopupButton, lv_scr_act(), LV_ALIGN_CENTER, 0, 0);
+  lv_obj_set_style_local_bg_color(infoPopupButton, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_NAVY);
 
-  buttonInfoPopupLabel = lv_label_create(buttonInfoPopup, nullptr);
-  lv_label_set_text_fmt(buttonInfoPopupLabel, "Left: focus duration\nRight: break duration");
+  infoPopupButtonLabel = lv_label_create(infoPopupButton, nullptr);
+  lv_label_set_text_fmt(infoPopupButtonLabel, "left: Focus\nright: Break");
 }
 
-void Pomodoro::hideInfo() {
-  lv_obj_del(buttonInfoPopup);
-  buttonInfoPopupLabel = nullptr;
-  buttonInfoPopup = nullptr;
+void Pomodoro::onInfoPopupButtonPress() {
+  lv_obj_del(infoPopupButton);
+  infoPopupButtonLabel = nullptr;
+  infoPopupButton = nullptr;
 }

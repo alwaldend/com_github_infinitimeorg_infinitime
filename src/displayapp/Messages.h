@@ -22,6 +22,8 @@ namespace Pinetime {
         NotifyDeviceActivity,
         ShowPairingKey,
         AlarmTriggered,
+        OnPomodoroAlarmTriggered,
+        OnPomodoroAlarmStop,
         Chime,
         BleRadioEnableToggle,
         OnChargingEvent,

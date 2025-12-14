@@ -221,6 +221,13 @@ void SystemTask::Work() {
           GoToRunning();
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::AlarmTriggered);
           break;
+        case Messages::OnPomodoroAlarm:
+          GoToRunning();
+          displayApp.PushMessage(Pinetime::Applications::Display::Messages::OnPomodoroAlarmTriggered);
+          break;
+        case Messages::OnPomodoroAlarmStop:
+          displayApp.PushMessage(Pinetime::Applications::Display::Messages::OnPomodoroAlarmStop);
+          break;
         case Messages::BleConnected:
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::NotifyDeviceActivity);
           isBleDiscoveryTimerRunning = true;

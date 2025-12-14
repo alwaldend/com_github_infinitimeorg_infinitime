@@ -20,25 +20,35 @@ namespace Pinetime::Applications {
       bool OnTouchEvent(TouchEvents event) override;
       void OnValueChanged();
       void OnButtonEvent(lv_obj_t* obj, lv_event_t event);
+      void OnPomodoroAlarmTriggered();
+      void StopAlarm();
 
     private:
       Controllers::PomodoroController& pomodoroController;
       System::WakeLock wakeLock;
       Controllers::MotorController& motorController;
 
-      lv_obj_t *buttonStop, *buttonStopLabel, *enableSwitch, *buttonInfo;
-      lv_obj_t* buttonInfoPopup = nullptr;
-      lv_obj_t* buttonInfoPopupLabel = nullptr;
+      lv_obj_t *buttonStop, *buttonStopLabel;
+      lv_task_t* taskStopAlarm = nullptr;
+
+      lv_obj_t *buttonInterval, *buttonIntervalLabel;
+      void updateIntervalButton();
+      void onIntervalButtonPress();
 
       Widgets::Counter focusCounter = Widgets::Counter(0, 59, jetbrains_mono_76);
       Widgets::Counter breakCounter = Widgets::Counter(0, 59, jetbrains_mono_76);
-
-      void toggleSwitch();
-      void showInfo();
-      void hideInfo();
       void updateDuration();
-      void stopAlerting();
-      void startAlerting();
+
+      lv_obj_t* enableSwitch;
+      void onEnableSwitchPress();
+      void updateSwitch(lv_anim_enable_t anim);
+
+      lv_obj_t* buttonInfo;
+      void onInfoButtonPress();
+
+      lv_obj_t* infoPopupButton = nullptr;
+      lv_obj_t* infoPopupButtonLabel = nullptr;
+      void onInfoPopupButtonPress();
     };
   }
 

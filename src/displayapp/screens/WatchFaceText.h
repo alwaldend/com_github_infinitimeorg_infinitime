@@ -1,5 +1,6 @@
 #pragma once
 
+#include <components/pomodoro/PomodoroController.h>
 #include <lvgl/src/lv_core/lv_obj.h>
 #include <chrono>
 #include <cstdint>
@@ -25,12 +26,10 @@ namespace Pinetime {
       class WatchFaceText : public Screen {
       public:
         WatchFaceText(Controllers::AlarmController& alarmController,
+                      Controllers::PomodoroController& pomodoroController,
                       Controllers::DateTime& dateTimeController,
                       const Controllers::Battery& batteryController,
                       const Controllers::Ble& bleController,
-                      Controllers::NotificationManager& notificationManager,
-                      Controllers::Settings& settingsController,
-                      Controllers::HeartRateController& heartRateController,
                       Controllers::MotionController& motionController);
         ~WatchFaceText() override;
 
@@ -38,45 +37,46 @@ namespace Pinetime {
 
       private:
         void refreshCharge();
-        void refreshBle();
-        void refreshDatetime();
-        void refreshHeartbeat();
-        void refreshSteps();
-        void refreshAlarm();
-
+        lv_obj_t* batteryLabel;
         Utility::DirtyValue<int> batteryPercentRemaining;
         Utility::DirtyValue<bool> powerPresent;
+        const Controllers::Battery& batteryController;
+
+        void refreshBle();
+        lv_obj_t* connectLabel;
         Utility::DirtyValue<bool> bleState;
         Utility::DirtyValue<bool> bleRadioEnabled;
-        Utility::DirtyValue<std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds>> currentDateTime;
-        Utility::DirtyValue<uint32_t> stepCount;
-        Utility::DirtyValue<uint8_t> heartbeat;
-        Utility::DirtyValue<bool> heartbeatRunning;
-        Utility::DirtyValue<bool> notificationState;
-        using days = std::chrono::duration<int32_t, std::ratio<86400>>; // TODO: days is standard in c++20
-        Utility::DirtyValue<std::chrono::time_point<std::chrono::system_clock, days>> currentDate;
-
-        lv_obj_t* label_time;
-        lv_obj_t* label_date;
-        lv_obj_t* label_prompt_1;
-        lv_obj_t* label_prompt_2;
-        lv_obj_t* batteryValue;
-        lv_obj_t* weekdayValue;
-        lv_obj_t* monthValue;
-        lv_obj_t* heartbeatValue;
-        lv_obj_t* stepValue;
-        lv_obj_t* notificationIcon;
-        lv_obj_t* connectState;
-        lv_obj_t* alarmValue;
-
-        Controllers::AlarmController& alarmController;
-        Controllers::DateTime& dateTimeController;
-        const Controllers::Battery& batteryController;
         const Controllers::Ble& bleController;
-        Controllers::NotificationManager& notificationManager;
-        Controllers::Settings& settingsController;
-        Controllers::HeartRateController& heartRateController;
+
+        void refreshDatetime();
+        lv_obj_t* timeLabel;
+        lv_obj_t* dateLabel;
+        lv_obj_t* weekdayLabel;
+        lv_obj_t* monthLabel;
+        using days = std::chrono::duration<int32_t, std::ratio<86400>>; // TODO: days is standard in c++20
+        Utility::DirtyValue<std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds>> currentDateTime;
+        Utility::DirtyValue<std::chrono::time_point<std::chrono::system_clock, days>> currentDate;
+        Utility::DirtyValue<Pinetime::Controllers::DateTime::Days> dayOfTheWeek;
+        Utility::DirtyValue<Pinetime::Controllers::DateTime::Months> month;
+        Controllers::DateTime& dateTimeController;
+
+        void refreshPomodoro();
+        lv_obj_t* pomodoroLabel;
+        Utility::DirtyValue<bool> pomodoroEnabled;
+        Utility::DirtyValue<Controllers::PomodoroController::IntervalType> pomodoroInterval;
+        Utility::DirtyValue<uint32_t> pomodoroSecondsLeft;
+        Controllers::PomodoroController& pomodoroController;
+
+        void refreshSteps();
+        lv_obj_t* stepLabel;
+        Utility::DirtyValue<uint32_t> stepCount;
         Controllers::MotionController& motionController;
+
+        void refreshAlarm();
+        lv_obj_t* alarmLabel;
+        Utility::DirtyValue<bool> alarmEnabled;
+        Utility::DirtyValue<uint32_t> alarmSeconds;
+        Controllers::AlarmController& alarmController;
 
         lv_task_t* taskRefresh;
       };
@@ -89,12 +89,10 @@ namespace Pinetime {
 
       static Screens::Screen* Create(AppControllers& controllers) {
         return new Screens::WatchFaceText(controllers.alarmController,
+                                          controllers.pomodoroController,
                                           controllers.dateTimeController,
                                           controllers.batteryController,
                                           controllers.bleController,
-                                          controllers.notificationManager,
-                                          controllers.settingsController,
-                                          controllers.heartRateController,
                                           controllers.motionController);
       };
 

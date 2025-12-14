@@ -387,6 +387,17 @@ void DisplayApp::Refresh() {
           LoadNewScreen(Apps::Alarm, DisplayApp::FullRefreshDirections::None);
         }
         break;
+      case Messages::OnPomodoroAlarmTriggered:
+        if (currentApp == Apps::Pomodoro) {
+          auto* pomodoro = static_cast<Screens::Pomodoro*>(currentScreen.get());
+          pomodoro->OnPomodoroAlarmTriggered();
+        } else {
+          LoadNewScreen(Apps::Pomodoro, DisplayApp::FullRefreshDirections::None);
+        }
+        break;
+      case Messages::OnPomodoroAlarmStop:
+        LoadPreviousScreen();
+        break;
       case Messages::ShowPairingKey:
         LoadNewScreen(Apps::PassKey, DisplayApp::FullRefreshDirections::Up);
         motorController.RunForDuration(35);
