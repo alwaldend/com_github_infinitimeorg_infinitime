@@ -36,8 +36,10 @@ void PomodoroController::SaveState() {
 }
 
 void PomodoroController::StartAlarm() {
-  isAlerting = true;
-  systemTask->PushMessage(System::Messages::OnPomodoroAlarm);
+  if (IsEnabled()) {
+    isAlerting = true;
+    systemTask->PushMessage(System::Messages::OnPomodoroAlarm);
+  }
 }
 
 uint32_t PomodoroController::SecondsLeft() {
@@ -69,7 +71,9 @@ void PomodoroController::UpdateInterval(IntervalType intervalType) {
   }
   stateChanged = true;
   state.intervalType = intervalType;
-  ScheduleAlarm();
+  if (IsEnabled()) {
+    ScheduleAlarm();
+  }
 }
 
 void PomodoroController::UpdateDuration(uint8_t focusDuration, uint8_t breakDuration) {
@@ -89,6 +93,7 @@ void PomodoroController::UpdateEnabled(bool isEnabled) {
   }
   stateChanged = true;
   state.isEnabled = isEnabled;
+  xTimerStop(alarmTimer, 0);
 }
 
 bool PomodoroController::IsAlerting() {
