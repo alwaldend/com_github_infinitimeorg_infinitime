@@ -9,6 +9,7 @@
 #include "components/ble/BleController.h"
 #include "components/datetime/DateTimeController.h"
 #include <components/pomodoro/PomodoroController.h>
+#include <lvgl/src/lv_misc/lv_anim.h>
 #include "components/ble/NotificationManager.h"
 #include "components/motion/MotionController.h"
 #include "components/motor/MotorController.h"
@@ -390,7 +391,7 @@ void DisplayApp::Refresh() {
       case Messages::OnPomodoroAlarmTriggered:
         if (currentApp == Apps::Pomodoro) {
           auto* pomodoro = static_cast<Screens::Pomodoro*>(currentScreen.get());
-          pomodoro->OnPomodoroAlarmTriggered();
+          pomodoro->UpdateUI(LV_ANIM_OFF);
         } else {
           LoadNewScreen(Apps::Pomodoro, DisplayApp::FullRefreshDirections::None);
         }

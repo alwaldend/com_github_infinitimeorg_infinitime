@@ -109,7 +109,7 @@ Pinetime::Controllers::AlarmController alarmController {dateTimeController, fs};
 Pinetime::Controllers::TouchHandler touchHandler;
 Pinetime::Controllers::ButtonHandler buttonHandler;
 Pinetime::Controllers::BrightnessController brightnessController {};
-Pinetime::Controllers::PomodoroController pomodoroController {dateTimeController, fs};
+Pinetime::Controllers::PomodoroController pomodoroController {dateTimeController, fs, motorController};
 
 Pinetime::Applications::DisplayApp displayApp(lcd,
                                               touchPanel,

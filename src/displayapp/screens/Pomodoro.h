@@ -4,51 +4,47 @@
 #include "displayapp/screens/Screen.h"
 #include "displayapp/widgets/Counter.h"
 #include "displayapp/Controllers.h"
-#include "systemtask/WakeLock.h"
+#include "utility/DirtyValue.h"
 #include "Symbols.h"
+#include <components/pomodoro/PomodoroController.h>
 
 namespace Pinetime::Applications {
   namespace Screens {
     class Pomodoro : public Screen {
     public:
-      explicit Pomodoro(Controllers::PomodoroController& pomodoroController,
-                        System::SystemTask& systemTask,
-                        Controllers::MotorController& motorController);
+      explicit Pomodoro(Controllers::PomodoroController& pomodoroController);
       ~Pomodoro() override;
 
       bool OnButtonPushed() override;
       bool OnTouchEvent(TouchEvents event) override;
+
       void OnValueChanged();
       void OnButtonEvent(lv_obj_t* obj, lv_event_t event);
-      void OnPomodoroAlarmTriggered();
       void StopAlarm();
+      void UpdateUI(lv_anim_enable_t animation);
 
     private:
       Controllers::PomodoroController& pomodoroController;
-      System::WakeLock wakeLock;
-      Controllers::MotorController& motorController;
 
       lv_obj_t *buttonStop, *buttonStopLabel;
-      lv_task_t* taskStopAlarm = nullptr;
+      Utility::DirtyValue<bool> alerting;
 
       lv_obj_t *buttonInterval, *buttonIntervalLabel;
-      void updateIntervalButton();
-      void onIntervalButtonPress();
+      Utility::DirtyValue<Pinetime::Controllers::PomodoroController::IntervalType> interval;
 
-      Widgets::Counter focusCounter = Widgets::Counter(0, 59, jetbrains_mono_76);
-      Widgets::Counter breakCounter = Widgets::Counter(0, 59, jetbrains_mono_76);
-      void updateDuration();
+      Widgets::Counter focusCounter = Widgets::Counter(1, 59, jetbrains_mono_76);
+      Utility::DirtyValue<uint8_t> focusValue;
+      Widgets::Counter breakCounter = Widgets::Counter(1, 59, jetbrains_mono_76);
+      Utility::DirtyValue<uint8_t> breakValue;
 
       lv_obj_t* enableSwitch;
-      void onEnableSwitchPress();
-      void updateSwitch(lv_anim_enable_t anim);
+      Utility::DirtyValue<bool> enabled;
 
       lv_obj_t* buttonInfo;
-      void onInfoButtonPress();
+      void updateInfoButtonUI();
 
-      lv_obj_t* infoPopupButton = nullptr;
-      lv_obj_t* infoPopupButtonLabel = nullptr;
-      void onInfoPopupButtonPress();
+      lv_obj_t *infoPopupButton, *infoPopupButtonLabel;
+      Utility::DirtyValue<bool> showInfo;
     };
   }
 
@@ -58,7 +54,7 @@ namespace Pinetime::Applications {
     static constexpr const char* icon = Screens::Symbols::clock;
 
     static Screens::Screen* Create(AppControllers& controllers) {
-      return new Screens::Pomodoro(controllers.pomodoroController, *controllers.systemTask, controllers.motorController);
+      return new Screens::Pomodoro(controllers.pomodoroController);
     };
   };
 }

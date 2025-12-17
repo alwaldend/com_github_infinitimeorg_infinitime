@@ -223,9 +223,11 @@ void SystemTask::Work() {
           break;
         case Messages::OnPomodoroAlarm:
           GoToRunning();
+          wakeLocksHeld++;
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::OnPomodoroAlarmTriggered);
           break;
         case Messages::OnPomodoroAlarmStop:
+          wakeLocksHeld--;
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::OnPomodoroAlarmStop);
           break;
         case Messages::BleConnected:

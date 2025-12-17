@@ -4,6 +4,7 @@
 #include <timers.h>
 #include <cstdint>
 #include "components/datetime/DateTimeController.h"
+#include "displayapp/Controllers.h"
 
 namespace Pinetime {
   namespace System {
@@ -13,17 +14,43 @@ namespace Pinetime {
   namespace Controllers {
     class PomodoroController {
     public:
-      PomodoroController(Controllers::DateTime& dateTimeController, Controllers::FS& fs);
+      PomodoroController(Controllers::DateTime& dateTimeController,
+                         Controllers::FS& filesystem,
+                         Controllers::MotorController& motorController);
 
       enum IntervalType { Focus, Break };
 
-      uint8_t FocusDuration();
-      uint8_t BreakDuration();
-      IntervalType Interval();
-      bool IsEnabled();
-      bool IsAlerting();
+      [[nodiscard]] IntervalType Interval() const {
+        return state.intervalType;
+      }
+
+      [[nodiscard]] uint8_t FocusDuration() const {
+        return state.focusDuration;
+      }
+
+      [[nodiscard]] uint8_t BreakDuration() const {
+        return state.breakDuration;
+      }
+
+      [[nodiscard]] bool IsEnabled() const {
+        return state.isEnabled;
+      }
+
+      [[nodiscard]] bool IsAlerting() const {
+        return isAlerting;
+      }
+
+      [[nodiscard]] bool IsShowingInfo() const {
+        return showInfo;
+      }
+
+      void UpdateShowInfo(bool val) {
+        showInfo = val;
+      }
+
       uint32_t SecondsLeft();
-      void UpdateDuration(uint8_t focusDuration, uint8_t breakDuration);
+      void UpdateBreak(uint8_t breakDuration);
+      void UpdateFocus(uint8_t focusDuration);
       void UpdateEnabled(bool isEnabled);
       void UpdateInterval(IntervalType intervalType);
       void ToggleInterval();
@@ -43,11 +70,15 @@ namespace Pinetime {
 
       Controllers::DateTime& dateTimeController;
       Controllers::FS& fs;
+      Controllers::MotorController& motorController;
+
       System::SystemTask* systemTask = nullptr;
       bool isAlerting = false;
+      bool showInfo = false;
       bool stateChanged = false;
       PomodoroState state;
       TimerHandle_t alarmTimer;
+      TimerHandle_t alarmStopTimer;
       std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> alarmTime;
 
       void saveState();

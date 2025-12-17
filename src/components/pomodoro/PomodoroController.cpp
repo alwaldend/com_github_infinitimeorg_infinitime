@@ -8,21 +8,29 @@
 using namespace Pinetime::Controllers;
 using namespace std::chrono_literals;
 
-PomodoroController::PomodoroController(Controllers::DateTime& dateTimeController, Controllers::FS& fs)
-  : dateTimeController {dateTimeController}, fs {fs} {
+PomodoroController::PomodoroController(Controllers::DateTime& dateTimeController,
+                                       Controllers::FS& filesystem,
+                                       Controllers::MotorController& motorController)
+  : dateTimeController {dateTimeController}, fs {filesystem}, motorController {motorController} {
 }
 
 namespace {
-  void alarmTimerHandler(TimerHandle_t xTimer) {
+  void alarmTimerStartHandler(TimerHandle_t xTimer) {
     auto* controller = static_cast<PomodoroController*>(pvTimerGetTimerID(xTimer));
     controller->StartAlarm();
+  }
+
+  void alarmTimerStopHandler(TimerHandle_t xTimer) {
+    auto* controller = static_cast<PomodoroController*>(pvTimerGetTimerID(xTimer));
+    controller->StopAlarm();
   }
 }
 
 void PomodoroController::Init(System::SystemTask* systemTask) {
   this->systemTask = systemTask;
   loadState();
-  alarmTimer = xTimerCreate("Pomodoro", 1, pdFALSE, this, alarmTimerHandler);
+  alarmTimer = xTimerCreate("PomodoroAlarmStart", 1, pdFALSE, this, alarmTimerStartHandler);
+  alarmStopTimer = xTimerCreate("PomodoroAlarmStop", 1, pdFALSE, this, alarmTimerStopHandler);
   if (IsEnabled()) {
     NRF_LOG_INFO("[PomodoroController] Scheduling the alarm");
     ScheduleAlarm();
@@ -35,23 +43,12 @@ void PomodoroController::SaveState() {
   }
 }
 
-void PomodoroController::StartAlarm() {
-  if (IsEnabled()) {
-    isAlerting = true;
-    systemTask->PushMessage(System::Messages::OnPomodoroAlarm);
-  }
-}
-
 uint32_t PomodoroController::SecondsLeft() {
   auto now = dateTimeController.CurrentDateTime();
   if (alarmTime >= now) {
     return std::chrono::duration_cast<std::chrono::seconds>(alarmTime - now).count();
   }
   return 0;
-}
-
-PomodoroController::IntervalType PomodoroController::Interval() {
-  return state.intervalType;
 }
 
 void PomodoroController::ToggleInterval() {
@@ -76,11 +73,14 @@ void PomodoroController::UpdateInterval(IntervalType intervalType) {
   }
 }
 
-void PomodoroController::UpdateDuration(uint8_t focusDuration, uint8_t breakDuration) {
+void PomodoroController::UpdateFocus(uint8_t focusDuration) {
   if (state.focusDuration != focusDuration) {
     stateChanged = true;
     state.focusDuration = focusDuration;
   }
+}
+
+void PomodoroController::UpdateBreak(uint8_t breakDuration) {
   if (state.breakDuration != breakDuration) {
     stateChanged = true;
     state.breakDuration = breakDuration;
@@ -93,28 +93,31 @@ void PomodoroController::UpdateEnabled(bool isEnabled) {
   }
   stateChanged = true;
   state.isEnabled = isEnabled;
-  xTimerStop(alarmTimer, 0);
+  if (isEnabled) {
+    ScheduleAlarm();
+  } else {
+    xTimerStop(alarmTimer, 0);
+  }
 }
 
-bool PomodoroController::IsAlerting() {
-  return isAlerting;
+void PomodoroController::StartAlarm() {
+  xTimerStop(alarmStopTimer, 0);
+  isAlerting = true;
+  systemTask->PushMessage(System::Messages::OnPomodoroAlarm);
+  motorController.StartRinging();
+  xTimerChangePeriod(alarmStopTimer, pdMS_TO_TICKS(60 * 1000), 0);
+  xTimerStart(alarmStopTimer, 0);
 }
 
 void PomodoroController::StopAlarm() {
+  xTimerStop(alarmStopTimer, 0);
   isAlerting = false;
   systemTask->PushMessage(System::Messages::OnPomodoroAlarmStop);
-}
-
-uint8_t PomodoroController::FocusDuration() {
-  return state.focusDuration;
-}
-
-uint8_t PomodoroController::BreakDuration() {
-  return state.breakDuration;
-}
-
-bool PomodoroController::IsEnabled() {
-  return state.isEnabled;
+  motorController.StopRinging();
+  if (IsEnabled()) {
+    ToggleInterval();
+    ScheduleAlarm();
+  }
 }
 
 void PomodoroController::ScheduleAlarm() {
@@ -130,10 +133,11 @@ void PomodoroController::ScheduleAlarm() {
       break;
   }
 
-  alarmTime = dateTimeController.CurrentDateTime() + std::chrono::minutes(duration);
-  xTimerChangePeriod(alarmTimer, duration * 60 * configTICK_RATE_HZ, 0);
-  xTimerStart(alarmTimer, 0);
-  UpdateEnabled(true);
+  if (duration > 0) {
+    alarmTime = dateTimeController.CurrentDateTime() + std::chrono::minutes(duration);
+    xTimerChangePeriod(alarmTimer, duration * 60 * configTICK_RATE_HZ, 0);
+    xTimerStart(alarmTimer, 0);
+  }
 }
 
 void PomodoroController::saveState() {
