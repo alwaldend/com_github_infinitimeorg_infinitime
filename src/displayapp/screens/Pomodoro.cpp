@@ -2,8 +2,6 @@
 #include "displayapp/screens/Symbols.h"
 #include "displayapp/InfiniTimeTheme.h"
 #include "components/pomodoro/PomodoroController.h"
-#include "components/motor/MotorController.h"
-#include "systemtask/SystemTask.h"
 #include <lvgl/src/lv_core/lv_obj.h>
 #include <lvgl/src/lv_misc/lv_anim.h>
 #include <lvgl/src/lv_widgets/lv_switch.h>
@@ -85,6 +83,7 @@ Pomodoro::Pomodoro(Controllers::PomodoroController& pomodoroController) : pomodo
   infoPopupButtonLabel = lv_label_create(infoPopupButton, nullptr);
   lv_label_set_text_fmt(infoPopupButtonLabel, "left: Focus\nright: Break");
 
+  pomodoroController.UpdateRinging();
   UpdateUI(LV_ANIM_OFF);
 }
 

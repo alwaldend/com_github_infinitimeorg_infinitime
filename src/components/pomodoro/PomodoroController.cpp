@@ -100,29 +100,41 @@ void PomodoroController::UpdateEnabled(bool isEnabled) {
   }
 }
 
+// DisplayApp::LoadNewScreen disables the motor
+void PomodoroController::UpdateRinging() {
+  if (isAlerting) {
+    motorController.StartRinging();
+  }
+}
+
 void PomodoroController::StartAlarm() {
+  if (isAlerting) {
+    return;
+  }
+  motorController.StartRinging();
   xTimerStop(alarmStopTimer, 0);
+  xTimerChangePeriod(alarmStopTimer, 1 * 60 * configTICK_RATE_HZ, 0);
+  xTimerStart(alarmStopTimer, 0);
   isAlerting = true;
   systemTask->PushMessage(System::Messages::OnPomodoroAlarm);
-  motorController.StartRinging();
-  xTimerChangePeriod(alarmStopTimer, pdMS_TO_TICKS(60 * 1000), 0);
-  xTimerStart(alarmStopTimer, 0);
 }
 
 void PomodoroController::StopAlarm() {
-  xTimerStop(alarmStopTimer, 0);
-  isAlerting = false;
-  systemTask->PushMessage(System::Messages::OnPomodoroAlarmStop);
+  if (!isAlerting) {
+    return;
+  }
   motorController.StopRinging();
+  xTimerStop(alarmStopTimer, 0);
+  xTimerStop(alarmTimer, 0);
+  isAlerting = false;
   if (IsEnabled()) {
     ToggleInterval();
     ScheduleAlarm();
   }
+  systemTask->PushMessage(System::Messages::OnPomodoroAlarmStop);
 }
 
 void PomodoroController::ScheduleAlarm() {
-  xTimerStop(alarmTimer, 0);
-
   uint8_t duration = 0;
   switch (Interval()) {
     case Break:

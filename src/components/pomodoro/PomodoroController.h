@@ -44,6 +44,8 @@ namespace Pinetime {
         return showInfo;
       }
 
+      void UpdateRinging();
+
       void UpdateShowInfo(bool val) {
         showInfo = val;
       }
