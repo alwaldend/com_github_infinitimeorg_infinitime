@@ -1,6 +1,4 @@
 common --disk_cache=~/.cache/bazel/disk_cache
-# Fix refetch after shutdown caused by the preset, remove in 8.5.0: https://github.com/bazelbuild/bazel/issues/27787
-common --incompatible_enforce_starlark_utf8=warning
 # Fix autoload from the preset
 common --incompatible_disable_native_repo_rules=false
 # Disable auto_exec_groups from the preset

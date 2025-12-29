@@ -4,6 +4,7 @@
 #include "components/pomodoro/PomodoroController.h"
 #include <lvgl/src/lv_core/lv_obj.h>
 #include <lvgl/src/lv_misc/lv_anim.h>
+#include <lvgl/src/lv_widgets/lv_btn.h>
 #include <lvgl/src/lv_widgets/lv_switch.h>
 
 using namespace Pinetime::Applications::Screens;
@@ -103,11 +104,15 @@ void Pomodoro::UpdateUI(lv_anim_enable_t animation) {
       lv_obj_set_hidden(buttonStop, false);
       focusCounter.HideControls();
       breakCounter.HideControls();
+      lv_btn_set_state(buttonInfo, LV_BTN_STATE_DISABLED);
+      lv_btn_set_state(buttonInterval, LV_BTN_STATE_DISABLED);
     } else {
       lv_obj_set_hidden(enableSwitch, false);
       lv_obj_set_hidden(buttonStop, true);
       focusCounter.ShowControls();
       breakCounter.ShowControls();
+      lv_btn_set_state(buttonInfo, LV_BTN_STATE_RELEASED);
+      lv_btn_set_state(buttonInterval, LV_BTN_STATE_RELEASED);
     }
   }
 

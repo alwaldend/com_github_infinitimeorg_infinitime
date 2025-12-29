@@ -66,9 +66,6 @@ void WatchFaceText::Refresh() {
 
 void WatchFaceText::refreshAlarm() {
   alarmEnabled = alarmController.IsEnabled();
-  if (!alarmEnabled.IsUpdated()) {
-    return;
-  }
   if (alarmEnabled.Get()) {
     alarmSeconds = alarmController.SecondsToAlarm();
     if (!alarmSeconds.IsUpdated()) {
