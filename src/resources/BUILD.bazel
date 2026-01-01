@@ -2,16 +2,9 @@ load("@com_alwaldend_com_github_infinitimeorg_infinitime_pip//:requirements.bzl"
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("@rules_python//python:py_binary.bzl", "py_binary")
 
-SRCS = glob([
-    "imgtool.py",
-    "imgtool/**",
-])
-
 py_binary(
-    name = "imgtool_bin",
-    srcs = SRCS,
-    imports = ["."],
-    main = "imgtool.py",
+    name = "lv_img_conv",
+    srcs = ["lv_img_conv.py"],
     visibility = ["//:__pkg__"],
     deps = all_requirements,
 )
@@ -20,7 +13,7 @@ pkg_files(
     name = "srcs",
     srcs = glob(
         ["**"],
-        exclude = SRCS,
+        exclude = ["**/BUILD.bazel"],
     ),
     prefix = package_name(),
     strip_prefix = strip_prefix.from_pkg(),

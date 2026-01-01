@@ -20,5 +20,5 @@ py_binary(
     srcs = ["build.py"],
     main = "build.py",
     visibility = ["//:__subpackages__"],
-    deps = all_requirements + ["//tools/mcuboot:imgtool_lib"],
+    deps = all_requirements,
 )

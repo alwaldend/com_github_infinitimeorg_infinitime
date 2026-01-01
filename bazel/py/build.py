@@ -9,16 +9,17 @@ import os.path
 def cmd_build(ctx: argparse.Namespace) -> None:
     env = os.environ.copy()
     for tool in ctx.tool:
-        env["PATH"] = f"{env.get('PATH', '')}:{os.path.abspath(os.path.dirname(tool))}:"
+        env["PATH"] = ":".join((env.get("PATH", ""), os.path.abspath(os.path.dirname(tool))))
     src_dir = os.path.abspath(ctx.src_dir)
     build_dir = os.path.abspath(ctx.build_dir)
     gcc_dir = os.path.abspath(ctx.gcc_dir)
     nrfsdk_dir = os.path.abspath(ctx.nrfsdk_dir)
     executable = os.path.abspath(sys.executable)
+    cmake = os.path.abspath(ctx.cmake)
 
     subprocess.run(
         (
-            ctx.cmake,
+            cmake,
             "-G",
             "Unix Makefiles",
             "-S",
@@ -37,7 +38,7 @@ def cmd_build(ctx: argparse.Namespace) -> None:
     )
     subprocess.run(
         (
-            ctx.cmake,
+            cmake,
             "--build",
             build_dir,
             "--config",

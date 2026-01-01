@@ -1,10 +1,23 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@rules_pkg//pkg:providers.bzl", "PackageFilegroupInfo")
 
+_SCRIPT = """\
+#!/usr/bin/env sh
+set -eu
+for root in "" "${{0}}.runfiles/{workspace_name}/" "${{RUNFILES_DIR:-}}/{workspace_name}/"; do
+    if [ -x "${{root}}{bin}" ]; then
+        export BAZEL_BINDIR="."
+        exec "${{root}}{bin}" {arguments} "${{@}}"
+    fi
+done
+echo "Could not find the binary"
+exit 1
+"""
+
 def _impl(ctx):
     runfiles = ctx.runfiles()
     exec = ctx.actions.declare_file("{}.script.sh".format(ctx.label.name))
-    root = "${{0}}.runfiles/{}".format(ctx.workspace_name)
+    root = "${root}"
 
     args = ["build"]
 
@@ -13,7 +26,7 @@ def _impl(ctx):
         ("--gcc_dir", "gcc", ctx.attr.gcc),
         ("--nrfsdk_dir", "nrfsdk", ctx.attr.nrfsdk),
     ]:
-        args.extend([flag, "{}/{}".format(root, dir)])
+        args.extend([flag, "{}{}".format(root, dir)])
         symlinks = {}
         for attr in attrs:
             for pkg_files, _ in attr[PackageFilegroupInfo].pkg_files:
@@ -22,7 +35,7 @@ def _impl(ctx):
         runfiles = runfiles.merge(ctx.runfiles(symlinks = symlinks))
 
     runfiles = runfiles.merge(ctx.runfiles(symlinks = symlinks))
-    args.extend(["--build_dir", "{}/{}".format(root, "build")])
+    args.extend(["--build_dir", "{}{}".format(root, "build")])
     args.extend(["--build_type", ctx.attr.build_type])
 
     cmake = ctx.toolchains["@rules_foreign_cc//toolchains:cmake_toolchain"].data
@@ -30,7 +43,7 @@ def _impl(ctx):
     args.extend(
         [
             "--cmake",
-            "{}/{}/{}".format(root, paths.dirname(cmake_files[0].short_path), cmake.path),
+            "{}{}/{}".format(root, paths.dirname(cmake_files[0].short_path), cmake.path),
         ],
     )
     runfiles = runfiles.merge(cmake.target[DefaultInfo].default_runfiles)
@@ -40,20 +53,16 @@ def _impl(ctx):
         args.extend(
             [
                 "--tool",
-                "{}/{}".format(root, tool[DefaultInfo].files_to_run.executable.short_path),
+                "{}{}".format(root, tool[DefaultInfo].files_to_run.executable.short_path),
             ],
         )
         runfiles = runfiles.merge(tool[DefaultInfo].default_runfiles)
 
     runfiles = runfiles.merge(ctx.attr.build_tool[DefaultInfo].default_runfiles)
     args.extend(ctx.attr.arguments)
-    script_content = """\
-        #!/usr/bin/env sh
-        set -eu
-        exec "{root}/{build_tool}" {arguments} "${{@}}"
-    """.format(
-        root = root,
-        build_tool = ctx.executable.build_tool.short_path,
+    script_content = _SCRIPT.format(
+        bin = ctx.executable.build_tool.short_path,
+        workspace_name = ctx.workspace_name,
         arguments = " ".join(['"{}"'.format(arg) for arg in args]),
     )
     ctx.actions.write(
@@ -105,6 +114,8 @@ build_binary = rule(
             default = [
                 "//bazel/js:lv_font_conv",
                 "//bazel/py:adafruit-nrfutil",
+                "//src/resources:lv_img_conv",
+                "//tools/mcuboot:imgtool_bin",
             ],
             cfg = "exec",
         ),
