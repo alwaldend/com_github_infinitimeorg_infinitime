@@ -103,7 +103,7 @@ void PomodoroController::UpdateEnabled(bool isEnabled) {
 // DisplayApp::LoadNewScreen disables the motor
 void PomodoroController::UpdateRinging() {
   if (isAlerting) {
-    motorController.StartRinging();
+    startRinging();
   }
 }
 
@@ -111,12 +111,16 @@ void PomodoroController::StartAlarm() {
   if (isAlerting) {
     return;
   }
+  startRinging();
+  isAlerting = true;
+  systemTask->PushMessage(System::Messages::OnPomodoroAlarm);
+}
+
+void PomodoroController::startRinging() {
   motorController.StartRinging();
   xTimerStop(alarmStopTimer, 0);
   xTimerChangePeriod(alarmStopTimer, 1 * 60 * configTICK_RATE_HZ, 0);
   xTimerStart(alarmStopTimer, 0);
-  isAlerting = true;
-  systemTask->PushMessage(System::Messages::OnPomodoroAlarm);
 }
 
 void PomodoroController::StopAlarm() {

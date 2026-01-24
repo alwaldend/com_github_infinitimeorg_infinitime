@@ -83,6 +83,7 @@ namespace Pinetime {
       TimerHandle_t alarmStopTimer;
       std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> alarmTime;
 
+      void startRinging();
       void saveState();
       void loadState();
     };
