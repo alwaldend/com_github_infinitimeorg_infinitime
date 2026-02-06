@@ -1,7 +1,7 @@
 module(
     name = "com_alwaldend_com_github_infinitimeorg_infinitime",
     version = "0.0.0",
-    bazel_compatibility = [">=9.0.0"],
+    bazel_compatibility = [">=8.0.0"],
     compatibility_level = 0,
 )
 
